@@ -9,6 +9,19 @@ from pychord import *
 
 from audiolazy import *
 
+def num_devices(bus):
+    addresses = []
+    for device in range(3, 128):
+        try:
+            bus.write_byte(device, 0)
+            addresses.append(device)
+        except IOError as e:
+            if e.errno != errno.EREMOTEIO:
+                print("Error: {0} on address {1}".format(e, hex(device)))
+        except Exception as e: # exception if read_byte fails
+            print("Error unk: {0} on address {1}".format(e, hex(device)))
+    return addresses
+
 class Note:
     def __init__(self, name, velocity):
         self.name = name
@@ -30,9 +43,9 @@ if __name__ == "__main__":
 
     addresses = num_devices(bus)
     if len(addresses) == 0:
-        return
+        print("humanophone slaves not found!")
+        exit(0)
 
-    # set up pygame
     pygame.init()
     pygame.midi.init()
 
@@ -58,29 +71,19 @@ if __name__ == "__main__":
                     on_event = False
                 else:
                     continue
+                print(on_event)
                 velocity = event[0][2]
                 note = Note(note_name, velocity)
                 if on_event:
                     input_notes.add(note)
                     freq = str2freq(note.name)
                     print(freq)
-                    bus.write_word_data(0x22, 0x55, int(freq))
+                    bus.write_word_data(0x20, 0x55, int(freq))
+                    bus.write_byte(0x20, 0x35)
                 else:
                     input_notes.discard(note)
+                    bus.write_byte(0x20, 0x33)
                 print(input_notes)
 
         pygame.time.wait(10)
-
-def num_devices(bus):
-    addresses = []
-    for device in range(3, 128):
-        try:
-            bus.write_byte(device, 0)
-            addresses.append(device)
-        except IOError as e:
-            if e.errno != errno.EREMOTEIO:
-                print("Error: {0} on address {1}".format(e, hex(device)))
-        except Exception as e: # exception if read_byte fails
-            print("Error unk: {0} on address {1}".format(e, hex(device)))
-    return addresses
 
