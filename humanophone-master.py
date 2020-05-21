@@ -71,15 +71,12 @@ if __name__ == "__main__":
                     on_event = False
                 else:
                     continue
-                print(on_event)
                 velocity = event[0][2]
                 note = Note(note_name, velocity)
                 if on_event:
                     input_notes.add(note)
                     freq = str2freq(note.name)
-                    print(freq)
                     bus.write_word_data(0x20, 0x55, int(freq))
-                    bus.write_byte(0x20, 0x35)
                 else:
                     input_notes.discard(note)
                     bus.write_byte(0x20, 0x33)
